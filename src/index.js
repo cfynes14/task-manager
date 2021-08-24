@@ -7,18 +7,30 @@ const taskRouter = require('./routers/task')
 const app = express()
 const port = process.env.PORT || 3000
 
-// app.use((req, res, next) => {
-//     if (req.method === 'GET') {
-//         res.send('GET requests are disabled')
-//     } else {
-//         next()
-//     }
+const multer = require('multer')
+const upload = multer({
+    dest: 'images',
+    limits: {
+        fileSize: 1000000
+    },
+    fileFilter(req, file, cb) {
+        if (!file.originalname.match(/\.(doc|docx)$/)) {
+            return cb(new Error('Please upload a word document'))
+        }
 
-// })
+    
+        cb(undefined, true)
 
-// app.use((req, res, next) => {
-//     res.status(503).send('Sorry, site is currently undergoing maintenance. Please try again later.')
-// })
+    }
+})
+const errorMiddleware = (req, res, next) => {
+    throw new Error('From my middleware')
+}
+app.post('/upload', upload.single('upload'), (req, res) => {
+    res.send()
+}, (error, req, res, next) => {
+    res.status(400).send({ error: error.message })
+})
 
 app.use(express.json())
 app.use(userRouter)
@@ -38,21 +50,7 @@ const myFunction = async () => {
     console.log(data)
 }
 
-const Task = require('./models/task')
-const User = require('./models/user')
-
-const main = async () => {
-    // const task = await Task.findById('6123980f6dd50f04c4d4db78')
-    // await task.populate('owner').execPopulate()
-    // console.log(task.owner)
-
-    const user = await User.findById('612397b805b8613888a4210c')
-    await user.populate('tasks').execPopulate()
-    console.log(user.tasks)
 
 
-}
-
-// main()
 
 
