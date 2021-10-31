@@ -9,7 +9,7 @@ const sendWelcomeEmail = (email, name) => {
         subject: 'Welcome to the app!',
         text: `Welcome to the app, ${name}! Let me know how you get along with the app.`
     }).then(() => {
-        console.log('Email sent succesfully')
+      
     }).catch((e) => {
         console.log(e.response.body)
     })
