@@ -19,6 +19,9 @@ app.use(function(req, res, next) {
     next();
   });
 
+
+app.options('*', cors())
+
 app.use(express.json())
 app.use(userRouter)
 app.use(taskRouter)
