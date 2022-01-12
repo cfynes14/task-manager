@@ -5,6 +5,8 @@ const sharp = require('sharp')
 const router = new express.Router()
 const multer = require('multer')
 const { sendWelcomeEmail, sendCancelEmail } = require('../emails/account')
+const { uploadFile } = require('../s3/s3')
+
 
 router.post('/users', async (req, res) => {
     const user = new User(req.body)
@@ -95,6 +97,7 @@ router.delete('/users/me', auth, async (req, res) => {
 })
 
 const upload = multer({
+    dest: 'uploads/',
     limits: {
         fileSize: 1000000
     },
@@ -107,8 +110,18 @@ const upload = multer({
     }
 })
 
+
 router.post('/users/me/avatar', auth, upload.single('avatar'), async (req, res) => {
-    const buffer = await sharp(req.file.buffer).resize({ width: 250, height: 250 }).png().toBuffer()
+
+    console.log('uploading avatar')
+
+    const file = req.file
+
+    const result = await uploadFile(file)
+
+    console.log(result)
+
+    // const buffer = await sharp(req.file.buffer).resize({ width: 250, height: 250 }).png().toBuffer()
     req.user.avatar = buffer
     await req.user.save()
     res.send()
