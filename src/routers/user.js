@@ -6,6 +6,9 @@ const router = new express.Router()
 const multer = require('multer')
 const { sendWelcomeEmail, sendCancelEmail } = require('../emails/account')
 const { uploadFile } = require('../s3/s3')
+const fs = require('fs')
+const util = require('util')
+const unlinkFile = util.promisify(fs.unlink)
 
 
 router.post('/users', async (req, res) => {
@@ -119,6 +122,7 @@ router.post('/users/me/avatar', auth, upload.single('avatar'), async (req, res) 
 
     const result = await uploadFile(file)
 
+    await unlinkFile(file.path)
     console.log(result)
 
     // const buffer = await sharp(req.file.buffer).resize({ width: 250, height: 250 }).png().toBuffer()
@@ -136,6 +140,7 @@ router.delete('/users/me/avatar', auth, async (req, res) => {
 })
 
 router.get('/users/:id/avatar', async (req, res) => {
+    console.log('getting avatar')
     try {
         const user = await User.findById(req.params.id)
 
