@@ -77,7 +77,6 @@ router.patch('/users/me', auth, async (req, res) => {
 
     try {
         
-
         updates.forEach((update) => req.user[update] = req.body[update])
 
         await req.user.save()
@@ -126,7 +125,7 @@ router.post('/users/me/avatar', auth, upload.single('avatar'), async (req, res) 
     console.log(result)
 
     // const buffer = await sharp(req.file.buffer).resize({ width: 250, height: 250 }).png().toBuffer()
-    req.user.avatar = buffer
+    req.user.avatar = result.Key
     await req.user.save()
     res.send()
 }, (error, req, res, next) => {
@@ -140,18 +139,20 @@ router.delete('/users/me/avatar', auth, async (req, res) => {
 })
 
 router.get('/users/:id/avatar', async (req, res) => {
-    console.log('getting avatar')
+    console.log('getting user avatar')
     try {
         const user = await User.findById(req.params.id)
 
         if (!user || !user.avatar) {
             throw new Error()
         }
-
-        res.set('Content-Type', 'image/png')
-        res.send(user.avatar)
+    const key = user.avatar
+        const readStream = await getFileStream(key)
+        console.log(readStream)
+        // res.set('Content-Type', 'image/png')
+        readStream.pipe(res)
     } catch (e) {
-
+        console.log(e)
     }
 })
 

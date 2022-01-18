@@ -25,10 +25,28 @@ const uploadFile = file => {
 
     return s3.upload(uploadParams).promise()
 }
-
+exports.uploadFile = uploadFile
 
 //downloads a file from s3
 
-exports.uploadFile = uploadFile
+const getFileStream = (fileKey) => {
 
-// module.exports = s3
+    const downloadParams = {
+        Key: fileKey, 
+        Bucket: bucketName
+    }
+
+    // console.log(downloadParams)
+
+    // console.log(fileKey)
+
+    // const res = s3.getObject(downloadParams).createReadStream()
+
+    // console.log(res)
+    console.log('trying to get pic....')
+
+   return s3.getObject(downloadParams).createReadStream()
+}
+
+exports.getFileStream = getFileStream
+
