@@ -5,7 +5,7 @@ const sharp = require('sharp')
 const router = new express.Router()
 const multer = require('multer')
 const { sendWelcomeEmail, sendCancelEmail } = require('../emails/account')
-const { uploadFile } = require('../s3/s3')
+const { uploadFile, getFileStream, deleteFileStream } = require('../s3/s3')
 const fs = require('fs')
 const util = require('util')
 const unlinkFile = util.promisify(fs.unlink)
@@ -121,20 +121,47 @@ router.post('/users/me/avatar', auth, upload.single('avatar'), async (req, res) 
 
     const result = await uploadFile(file)
 
-    await unlinkFile(file.path)
-    console.log(result)
-
+    if (result === undefined) {
+        res.status(400).send()
+    } else {
+        await unlinkFile(file.path)
     // const buffer = await sharp(req.file.buffer).resize({ width: 250, height: 250 }).png().toBuffer()
-    req.user.avatar = result.Key
+    req.user.avatarKey = result.Key
     await req.user.save()
     res.send()
-}, (error, req, res, next) => {
-    res.status(400).send({ error: error.message })
+    }
 })
 
-router.delete('/users/me/avatar', auth, async (req, res) => {   
-    req.user.avatar = undefined
+router.delete('/users/:id/avatar', auth, async (req, res) => {   
+    console.log('deleteing avatar')
+
+    console.log(req.params.id)
+    try {
+        const user = await User.findById(req.params.id)
+    
+        if (!user || !user.avatarKey){
+            throw new Error()
+        }
+
+        const key = user.avatarKey
+
+        try {
+            await deleteFileStream(key)
+        } catch (e) {
+            console.log(e)
+            res.status(400).send(e)
+            return
+        }
+
+    req.user.avatarKey = undefined
+
     await req.user.save()
+
+    res.send()
+    } catch(e) {
+        console.log(e)
+        res.status(400).send(e)
+    } 
     res.send()
 })
 
@@ -142,17 +169,19 @@ router.get('/users/:id/avatar', async (req, res) => {
     console.log('getting user avatar')
     try {
         const user = await User.findById(req.params.id)
-
-        if (!user || !user.avatar) {
-            throw new Error()
+        console.log(req.params.id)
+        if (!user || !user.avatarKey) {
+            throw new Error('No key')
         }
-    const key = user.avatar
+    const key = user.avatarKey
         const readStream = await getFileStream(key)
-        console.log(readStream)
-        // res.set('Content-Type', 'image/png')
+        console.log('THISIS THE KEY')
+        console.log(readStream.key)
+        res.set('Content-Type', 'image/png')
         readStream.pipe(res)
     } catch (e) {
         console.log(e)
+        res.status(400).send(e)
     }
 })
 

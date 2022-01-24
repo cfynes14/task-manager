@@ -49,7 +49,7 @@ const userSchema = new mongoose.Schema({
             required: true
         }
     }], 
-    avatar: {
+    avatarKey: {
        type: String 
     },
 }, {

@@ -23,7 +23,11 @@ const uploadFile = file => {
         Key: file.filename
     }
 
-    return s3.upload(uploadParams).promise()
+    try {
+        return s3.upload(uploadParams).promise()
+    } catch(e){
+        console.log('Error: ' + ' ' + e)
+    }
 }
 exports.uploadFile = uploadFile
 
@@ -36,17 +40,32 @@ const getFileStream = (fileKey) => {
         Bucket: bucketName
     }
 
-    // console.log(downloadParams)
-
-    // console.log(fileKey)
-
-    // const res = s3.getObject(downloadParams).createReadStream()
-
-    // console.log(res)
-    console.log('trying to get pic....')
-
    return s3.getObject(downloadParams).createReadStream()
 }
 
 exports.getFileStream = getFileStream
+
+const deleteFileStream = async (fileKey) => {
+    console.log('deleting avatar stream')
+
+    const deleteParams = {
+        Key: fileKey,
+        Bucket: bucketName
+    }
+
+    // try {
+    //    const res = await s3.deleteObject(deleteParams).promise()
+    //    console.log('RES IS THIS')
+    //    console.log(res)
+    //    console.log(res.status)
+    // } catch(e) {
+    //     console.log('THERE IS AN ERRRO')
+    //     console.log(e)
+    // }
+    return s3.deleteObject(deleteParams).promise()
+}
+
+exports.deleteFileStream = deleteFileStream
+
+
 
