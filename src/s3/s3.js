@@ -15,8 +15,7 @@ const s3 = new S3({
 
 // uploads a file to s3
 const uploadFile = file => {
-    const fileStream = fs.createReadStream(file.path)
-
+    const fileStream = fs.createReadStream('uploads/sharpOutput.png')
     const uploadParams = {
         Bucket: bucketName,
         Body: fileStream,
@@ -26,7 +25,7 @@ const uploadFile = file => {
     try {
         return s3.upload(uploadParams).promise()
     } catch(e){
-        console.log('Error: ' + ' ' + e)
+        console.log('S3 Error: ' + ' ' + e)
     }
 }
 exports.uploadFile = uploadFile
@@ -46,22 +45,11 @@ const getFileStream = (fileKey) => {
 exports.getFileStream = getFileStream
 
 const deleteFileStream = async (fileKey) => {
-    console.log('deleting avatar stream')
-
     const deleteParams = {
         Key: fileKey,
         Bucket: bucketName
     }
 
-    // try {
-    //    const res = await s3.deleteObject(deleteParams).promise()
-    //    console.log('RES IS THIS')
-    //    console.log(res)
-    //    console.log(res.status)
-    // } catch(e) {
-    //     console.log('THERE IS AN ERRRO')
-    //     console.log(e)
-    // }
     return s3.deleteObject(deleteParams).promise()
 }
 

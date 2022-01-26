@@ -2,6 +2,7 @@ const express = require('express')
 const User = require('../models/user')
 const auth = require ('../middleware/auth')
 const sharp = require('sharp')
+// sharp.cache('false')
 const router = new express.Router()
 const multer = require('multer')
 const { sendWelcomeEmail, sendCancelEmail } = require('../emails/account')
@@ -101,7 +102,7 @@ router.delete('/users/me', auth, async (req, res) => {
 const upload = multer({
     dest: 'uploads/',
     limits: {
-        fileSize: 1000000
+        fileSize: 3000000
     },
     fileFilter(req, file, cb) {
         if (!file.originalname.match(/\.(jpg|jpeg|png$)/)) {
@@ -114,33 +115,28 @@ const upload = multer({
 
 
 router.post('/users/me/avatar', auth, upload.single('avatar'), async (req, res) => {
-
-    console.log('uploading avatar')
-
     const file = req.file
-
-    const result = await uploadFile(file)
-
-    if (result === undefined) {
-        res.status(400).send()
-    } else {
+    try {
+        await sharp(file.path).resize({ width: 250, height: 250 }).png().toFile('uploads/sharpOutput.png')
+        const result = await uploadFile(file)
         await unlinkFile(file.path)
-    // const buffer = await sharp(req.file.buffer).resize({ width: 250, height: 250 }).png().toBuffer()
-    req.user.avatarKey = result.Key
-    await req.user.save()
+        await unlinkFile('uploads/sharpOutput.png')
+
+        req.user.avatarKey = result.Key
+        await req.user.save()       
+    } catch(e){
+        res.status(400).send('Error: unable to upload photo' + e)
+    }   
     res.send()
-    }
 })
 
 router.delete('/users/:id/avatar', auth, async (req, res) => {   
-    console.log('deleteing avatar')
-
-    console.log(req.params.id)
     try {
         const user = await User.findById(req.params.id)
     
         if (!user || !user.avatarKey){
             throw new Error()
+
         }
 
         const key = user.avatarKey
@@ -166,17 +162,13 @@ router.delete('/users/:id/avatar', auth, async (req, res) => {
 })
 
 router.get('/users/:id/avatar', async (req, res) => {
-    console.log('getting user avatar')
     try {
         const user = await User.findById(req.params.id)
-        console.log(req.params.id)
         if (!user || !user.avatarKey) {
             throw new Error('No key')
         }
     const key = user.avatarKey
-        const readStream = await getFileStream(key)
-        console.log('THISIS THE KEY')
-        console.log(readStream.key)
+        const readStream = getFileStream(key)
         res.set('Content-Type', 'image/png')
         readStream.pipe(res)
     } catch (e) {
