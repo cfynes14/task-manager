@@ -33,6 +33,7 @@ router.get('/tasks', auth, async (req, res) => {
     }
 })
 
+//get single task
 router.get('/tasks/:id', auth, async (req,res) => {
     const _id = req.params.id
 
@@ -47,6 +48,7 @@ router.get('/tasks/:id', auth, async (req,res) => {
     }
 })
 
+//add task
 router.post('/tasks', auth, async (req, res) => {
     const task = new Task({
         ...req.body,
@@ -61,6 +63,7 @@ router.post('/tasks', auth, async (req, res) => {
     }
 })
 
+//update task
 router.patch('/tasks/:id', auth, async (req, res) => {
     const updates = Object.keys(req.body)
     const allowedUpdates = ['description', 'completed']
@@ -85,6 +88,7 @@ router.patch('/tasks/:id', auth, async (req, res) => {
     }
 })
 
+//delete task
 router.delete('/tasks/:id', auth, async (req, res) => {
     try {
         const task = await Task.findOneAndDelete({ _id: req.params.id, owner: req.user._id })
