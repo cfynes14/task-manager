@@ -1,15 +1,10 @@
 const express = require('express')
 const User = require('../models/user')
 const auth = require ('../middleware/auth')
-const sharp = require('sharp')
-// sharp.cache('false')
 const router = new express.Router()
-const multer = require('multer')
 const { sendWelcomeEmail, sendCancelEmail } = require('../emails/account')
 const { uploadFile, getFileStream, deleteFileStream } = require('../s3/s3')
-const fs = require('fs')
-const util = require('util')
-const unlinkFile = util.promisify(fs.unlink)
+
 
 
 router.post('/users', async (req, res) => {
@@ -99,28 +94,11 @@ router.delete('/users/me', auth, async (req, res) => {
     }
 })
 
-const upload = multer({
-    dest: 'uploads/',
-    limits: {
-        fileSize: 3000000
-    },
-    fileFilter(req, file, cb) {
-        if (!file.originalname.match(/\.(jpg|jpeg|png$)/)) {
-            return cb(new Error('Please upload files in jpg, jpeg or png format'))
-        }
 
-        return cb(undefined, true)
-    }
-})
-
-
-router.post('/users/me/avatar', auth, upload.single('avatar'), async (req, res) => {
+router.post('/users/me/avatar', auth, async (req, res) => {
     const file = req.file
     try {
-        await sharp(file.path).resize({ width: 250, height: 250 }).png().toFile('uploads/sharpOutput.png')
         const result = await uploadFile(file)
-        await unlinkFile(file.path)
-        await unlinkFile('uploads/sharpOutput.png')
 
         req.user.avatarKey = result.Key
         await req.user.save()       
