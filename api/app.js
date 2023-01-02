@@ -16,6 +16,7 @@ app.use(cookieParser())
 app.use(function(req, res, next) {
     res.header("Access-Control-Allow-Origin", process.env.CLIENT_ENDPOINT); 
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    res.header("Cache-Control", "s-max-age=1, stale-while-revalidate")
     next();
   });
 
