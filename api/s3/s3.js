@@ -14,11 +14,11 @@ const s3 = new S3({
 })
 
 // uploads a file to s3
-const uploadFile = file => {
+const uploadFile = (file, userId) => {
     const uploadParams = {
         Bucket: bucketName,
-        Body: file,
-        Key: file.filename
+        Body: file.buffer,
+        Key: `${userId}_avatar` 
     }
 
     try {

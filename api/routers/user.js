@@ -1,6 +1,7 @@
 const express = require('express')
 const User = require('../models/user')
 const auth = require ('../middleware/auth')
+const multer = require("multer");
 const router = new express.Router()
 const { sendWelcomeEmail, sendCancelEmail } = require('../emails/account')
 const { uploadFile, getFileStream, deleteFileStream } = require('../s3/s3')
@@ -95,10 +96,26 @@ router.delete('/users/me', auth, async (req, res) => {
 })
 
 
-router.post('/users/me/avatar', auth, async (req, res) => {
+const storage = multer.memoryStorage()
+const upload = multer({
+    storage,
+    limits: {
+        fileSize: 5000000
+    },
+    fileFilter(req, file, cb) {
+        if (!file.originalname.match(/\.(jpg|jpeg|png$)/)) {
+            return cb(new Error('Please upload files in jpg, jpeg or png format'))
+        }
+        return cb(undefined, true)
+    }
+})
+
+router.post('/users/me/avatar', auth, upload.single("avatar"), async (req, res) => {
     const file = req.file
+
     try {
-        const result = await uploadFile(file)
+
+        const result = await uploadFile(file, req.user._id)
 
         req.user.avatarKey = result.Key
         await req.user.save()       
@@ -142,11 +159,13 @@ router.delete('/users/:id/avatar', auth, async (req, res) => {
 router.get('/users/:id/avatar', async (req, res) => {
     try {
         const user = await User.findById(req.params.id)
+
         if (!user || !user.avatarKey) {
             throw new Error('No key')
         }
     const key = user.avatarKey
         const readStream = getFileStream(key)
+
         res.set('Content-Type', 'image/png')
         readStream.pipe(res)
     } catch (e) {
