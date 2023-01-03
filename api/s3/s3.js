@@ -15,10 +15,9 @@ const s3 = new S3({
 
 // uploads a file to s3
 const uploadFile = file => {
-    const fileStream = fs.createReadStream('uploads/sharpOutput.png')
     const uploadParams = {
         Bucket: bucketName,
-        Body: fileStream,
+        Body: file,
         Key: file.filename
     }
 
