@@ -17,6 +17,7 @@ app.use(function(req, res, next) {
     res.header("Access-Control-Allow-Origin", process.env.CLIENT_ENDPOINT); 
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     res.header("Cache-Control", "s-max-age=1, stale-while-revalidate")
+    res.header('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT')
     next();
   });
 
